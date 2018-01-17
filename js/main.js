@@ -1,3 +1,7 @@
+'use strict';
+
+let clickCounter = 0;
+
 const container = document.getElementById('response');
 const sendButton = document.getElementById('sendButton');
 const serverUrl = 'https://www.eliftech.com/school-task';
@@ -7,7 +11,6 @@ const operators = {
   '*': (x, y) => (parseInt(y) != 0) ? parseInt(x) % parseInt(y) : 42,
   '/': (x, y) => (parseInt(y) != 0) ? parseInt(x / y) : 42
 };
-let clickCounter = 0;
 
 function reversePolishNotation(array) {
   let stack = [];
@@ -30,23 +33,20 @@ function isNumeric(number) {
 
 function prepareInformation(data) {
   let expressionsArr = [];
-  clickCounter++;
   data.expressions.map(function(expression) {
     let rpn = reversePolishNotation(expression);
     expressionsArr.push(rpn);
   })
-  container.innerHTML += `<p>Request: <span>${clickCounter}</span> </p>`;
-  container.innerHTML += `<p>Expressions: <span>${data.expressions}</span></p>`;
-  container.innerHTML += `<p>Calculation Result: <span>${expressionsArr}</span></p>`;
+  clickCounter++;
+  textView('request', {'serverExpressions' : data.expressions, 'calculateResult' : expressionsArr});
   checkResultCalculation(data.id, expressionsArr);
 }
 
 function getExpressions() {
-  sendButton.innerText = 'Loading...';
-  sendButton.setAttribute("disabled", "disabled");
+  buttonView('disabled', 'Loading...');
   fetch(serverUrl).then((response) => response.json())
   .then(function(data) {
-    let info = prepareInformation(data);
+    prepareInformation(data);
   }).catch(function(error) {
     console.log(error);
   });
@@ -61,10 +61,34 @@ function checkResultCalculation(id, results) {
   })
   .then(response => response.json())
   .then(function(data) {
-   container.innerHTML += `<p class="last">Passed: <span>${data.passed}</span></p>`;
-   sendButton.innerText  = 'Send Request';
-   sendButton.removeAttribute("disabled");
+   textView('response', data.passed);
+   buttonView('enabled', 'Send Request');
  });
+}
+
+function buttonView(state, text) {
+  sendButton.innerText = text;
+  switch(state) {
+    case 'disabled':  
+      sendButton.setAttribute("disabled", "disabled");
+      break;
+    case 'enabled':
+      sendButton.removeAttribute("disabled");
+      break;
+  }
+}
+
+function textView(state, information) {
+  switch(state) {
+    case 'request':  
+      container.innerHTML += `<p>Request: <span>${clickCounter}</span></p> 
+      <p>Expressions: <span>${information.serverExpressions}</span></p>
+      <p>Calculation Result: <span>${information.calculateResult}</span></p>`;
+      break;
+    case 'response':
+      container.innerHTML += `<p class="last">Passed: <span>${information}</span></p>`;
+      break;
+  }
 }
 
 sendButton.addEventListener('click', getExpressions);
