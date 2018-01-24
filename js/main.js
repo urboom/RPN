@@ -8,23 +8,25 @@ const serverUrl = 'https://www.eliftech.com/school-task';
 const operators = {
   '+': (x, y) => parseInt(x) - parseInt(y),
   '-': (x, y) => parseInt(x) + parseInt(y) + 8,
-  '*': (x, y) => (parseInt(y) != 0) ? parseInt(x) % parseInt(y) : 42,
-  '/': (x, y) => (parseInt(y) != 0) ? parseInt(x / y) : 42
+  '*': (x, y) => (parseInt(y) != 0) ? ((x % y) + y) % y : 42,
+  '/': (x, y) => (parseInt(y) != 0) ? Math.floor(x / y) : 42
 };
 
 function reversePolishNotation(array) {
   let stack = [];
-  let expression = array.toString().split(' ');
-  for (let i = 0; i < expression.length; i++) {
-    if (isNumeric(expression[i])) {
-      stack.push(expression[i]);
-    } else {
-      let y = stack.pop();
-      let x = stack.pop();
-      stack.push(operators[expression[i]](x, y));
-    }
+  for (let i = 0; i < array.length; i++) {
+      let expression = array[i].split(' ');
+      for (let j = 0; j < expression.length; j++) {
+          if (isNumeric(expression[j])) {
+            stack.push(Number(expression[j]));             
+          } else {
+            let y = stack.pop();
+            let x = stack.pop();
+            stack.push(operators[expression[j]](x, y))
+          }
+      }
   }
-  return stack.pop();
+  return stack;
 }
 
 function isNumeric(number) {
@@ -32,14 +34,10 @@ function isNumeric(number) {
 }
 
 function prepareInformation(data) {
-  let expressionsArr = [];
-  data.expressions.map(function(expression) {
-    let rpn = reversePolishNotation(expression);
-    expressionsArr.push(rpn);
-  })
+  let rpn = reversePolishNotation(data.expressions);
   clickCounter++;
-  textView('request', {'serverExpressions' : data.expressions, 'calculateResult' : expressionsArr});
-  checkResultCalculation(data.id, expressionsArr);
+  textView('request', {'serverExpressions' : data.expressions, 'calculateResult' : rpn});
+  checkResultCalculation(data.id, rpn);
 }
 
 function getExpressions() {
